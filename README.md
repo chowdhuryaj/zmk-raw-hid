@@ -78,6 +78,11 @@ Replies go only to the transport (USB or BLE) the last report arrived on,
 and over BLE only to the host that wrote it.
 Before the first report, sends go to every enabled transport.
 
+A third transport can live outside this module: it calls
+`raw_hid_set_reply_transport(RAW_HID_TRANSPORT_EXT)`, raises
+`raw_hid_received_event`, and implements `raw_hid_ext_send()` (weak no-op
+here).
+
 ## Thanks
 
 This module is heavily based on [badjeff's zmk-hid-io](https://github.com/badjeff/zmk-hid-io).

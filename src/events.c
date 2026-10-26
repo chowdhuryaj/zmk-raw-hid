@@ -1,6 +1,7 @@
 #include <raw_hid/events.h>
 
 #include <zephyr/sys/atomic.h>
+#include <zephyr/toolchain.h>
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(zmk, CONFIG_ZMK_LOG_LEVEL);
@@ -22,6 +23,8 @@ void raw_hid_set_reply_transport(enum raw_hid_transport transport) {
     atomic_set(&reply_transport, transport);
 }
 
+__weak void raw_hid_ext_send(const uint8_t *data, uint8_t len) {}
+
 static int raw_hid_sent_event_listener(const zmk_event_t *eh) {
     struct raw_hid_sent_event *event = as_raw_hid_sent_event(eh);
     if (event == NULL) {
@@ -40,6 +43,9 @@ static int raw_hid_sent_event_listener(const zmk_event_t *eh) {
         raw_hid_ble_send(event->data, event->length);
     }
 #endif
+    if (transport & RAW_HID_TRANSPORT_EXT) {
+        raw_hid_ext_send(event->data, event->length);
+    }
 
     return ZMK_EV_EVENT_BUBBLE;
 }
