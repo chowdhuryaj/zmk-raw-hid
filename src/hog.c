@@ -76,6 +76,7 @@ static ssize_t write_hids_raw_hid_report(struct bt_conn *conn, const struct bt_g
     uint8_t *data = (uint8_t *)buf;
     LOG_INF("BT - Received Raw HID report of length %i", len);
     LOG_HEXDUMP_DBG(data, len, "BT - Received Raw HID report");
+    raw_hid_set_reply_transport(RAW_HID_TRANSPORT_BLE);
     raise_raw_hid_received_event((struct raw_hid_received_event){.data = data, .length = len});
 
     return len;
@@ -122,7 +123,7 @@ BT_GATT_SERVICE_DEFINE(
     BT_GATT_CHARACTERISTIC(BT_UUID_HIDS_CTRL_POINT, BT_GATT_CHRC_WRITE_WITHOUT_RESP,
                            BT_GATT_PERM_WRITE, NULL, write_ctrl_point, &ctrl_point));
 
-static void send_report(const uint8_t *data, uint8_t len) {
+void raw_hid_ble_send(const uint8_t *data, uint8_t len) {
     struct bt_conn *conn = zmk_ble_active_profile_conn();
     if (conn == NULL) {
         LOG_ERR("Not connected to active profile");
@@ -149,18 +150,6 @@ static void send_report(const uint8_t *data, uint8_t len) {
 
     bt_conn_unref(conn);
 }
-
-static int raw_hid_sent_event_listener(const zmk_event_t *eh) {
-    struct raw_hid_sent_event *event = as_raw_hid_sent_event(eh);
-    if (event) {
-        send_report(event->data, event->length);
-    }
-
-    return ZMK_EV_EVENT_BUBBLE;
-}
-
-ZMK_LISTENER(bt_process_raw_hid_sent_event, raw_hid_sent_event_listener);
-ZMK_SUBSCRIPTION(bt_process_raw_hid_sent_event, raw_hid_sent_event);
 
 K_THREAD_STACK_DEFINE(raw_hog_q_stack, CONFIG_ZMK_BLE_THREAD_STACK_SIZE);
 

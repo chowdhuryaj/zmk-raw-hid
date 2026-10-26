@@ -68,10 +68,14 @@ ZMK_SUBSCRIPTION(process_raw_hid_event, raw_hid_received_event);
 | Name                         | Description                       | Default |
 | ---------------------------- | --------------------------------- | ------- |
 | `CONFIG_RAW_HID`             | Enable Raw HID module             | n       |
+| `CONFIG_RAW_HID_USB`         | Raw HID interface on USB          | y       |
 | `CONFIG_RAW_HID_USAGE_PAGE`  | HID Usage Page                    | 0xFF60  |
 | `CONFIG_RAW_HID_USAGE`       | HID Usage                         | 0x61    |
 | `CONFIG_RAW_HID_REPORT_SIZE` | HID Report size (number of bytes) | 32      |
 | `CONFIG_RAW_HID_DEVICE`      | New HID device name               | HID_1   |
+
+Replies go only to the transport (USB or BLE) the last report arrived on.
+Before the first report, sends go to every enabled transport.
 
 ## Thanks
 

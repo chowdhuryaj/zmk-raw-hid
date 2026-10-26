@@ -35,6 +35,7 @@ static int set_report_cb(const struct device *dev, struct usb_setup_packet *setu
 
     LOG_INF("USB - Received Raw HID report of length %i", *len);
     LOG_HEXDUMP_DBG(*data, *len, "USB - Received Raw HID report");
+    raw_hid_set_reply_transport(RAW_HID_TRANSPORT_USB);
     raise_raw_hid_received_event((struct raw_hid_received_event){.data = *data, .length = *len});
 
     return 0;
@@ -46,7 +47,7 @@ static const struct hid_ops ops = {
     .set_report = set_report_cb,
 };
 
-static void send_report(const uint8_t *data, uint8_t len) {
+void raw_hid_usb_send(const uint8_t *data, uint8_t len) {
     k_sem_take(&hid_sem, K_MSEC(30));
 
     LOG_INF("USB - Sending Raw HID report of length %i", len);
@@ -68,18 +69,6 @@ static void send_report(const uint8_t *data, uint8_t len) {
         k_sem_give(&hid_sem);
     }
 }
-
-static int raw_hid_sent_event_listener(const zmk_event_t *eh) {
-    struct raw_hid_sent_event *event = as_raw_hid_sent_event(eh);
-    if (event) {
-        send_report(event->data, event->length);
-    }
-
-    return ZMK_EV_EVENT_BUBBLE;
-}
-
-ZMK_LISTENER(usb_process_raw_hid_sent_event, raw_hid_sent_event_listener);
-ZMK_SUBSCRIPTION(usb_process_raw_hid_sent_event, raw_hid_sent_event);
 
 static int raw_hid_init(void) {
     raw_hid_dev = device_get_binding(CONFIG_RAW_HID_DEVICE);

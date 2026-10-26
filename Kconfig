@@ -1,7 +1,15 @@
 config RAW_HID
     bool "Enable Raw HID"
     depends on !ZMK_SPLIT || ZMK_SPLIT_ROLE_CENTRAL
+
+config RAW_HID_USB
+    bool "Raw HID over USB"
+    default y
+    depends on RAW_HID
     imply USB_DEVICE_HID
+    help
+      Adds the raw HID interface to the USB device. Say n to keep raw HID
+      on BLE only: the USB host then sees no vendor HID interface.
 
 config RAW_HID_USAGE_PAGE
     hex "Raw HID Usage Page"

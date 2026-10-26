@@ -1,0 +1,8 @@
+if SHIELD_RAW_HID_ADAPTER
+
+# One extra USB HID device for raw HID. Without RAW_HID_USB the count stays at
+# Zephyr's default, so no empty second HID interface reaches the USB host.
+config USB_HID_DEVICE_COUNT
+    default 2 if RAW_HID_USB
+
+endif
