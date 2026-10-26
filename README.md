@@ -74,7 +74,8 @@ ZMK_SUBSCRIPTION(process_raw_hid_event, raw_hid_received_event);
 | `CONFIG_RAW_HID_REPORT_SIZE` | HID Report size (number of bytes) | 32      |
 | `CONFIG_RAW_HID_DEVICE`      | New HID device name               | HID_1   |
 
-Replies go only to the transport (USB or BLE) the last report arrived on.
+Replies go only to the transport (USB or BLE) the last report arrived on,
+and over BLE only to the host that wrote it.
 Before the first report, sends go to every enabled transport.
 
 ## Thanks

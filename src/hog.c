@@ -3,6 +3,7 @@
 
 #include <zmk/ble.h>
 
+#include <zephyr/bluetooth/conn.h>
 #include <zephyr/bluetooth/gatt.h>
 
 #include <zephyr/logging/log.h>
@@ -48,6 +49,11 @@ static struct hids_report raw_hid_report_input = {
 
 static uint8_t ctrl_point;
 
+/* Host that wrote the last report: replies go back to it, not to whichever
+ * host holds the active profile. */
+static bt_addr_le_t reply_addr;
+static bool reply_addr_set;
+
 static ssize_t read_hids_info(struct bt_conn *conn, const struct bt_gatt_attr *attr, void *buf,
                               uint16_t len, uint16_t offset) {
     return bt_gatt_attr_read(conn, attr, buf, len, offset, attr->user_data,
@@ -76,6 +82,8 @@ static ssize_t write_hids_raw_hid_report(struct bt_conn *conn, const struct bt_g
     uint8_t *data = (uint8_t *)buf;
     LOG_INF("BT - Received Raw HID report of length %i", len);
     LOG_HEXDUMP_DBG(data, len, "BT - Received Raw HID report");
+    bt_addr_le_copy(&reply_addr, bt_conn_get_dst(conn));
+    reply_addr_set = true;
     raw_hid_set_reply_transport(RAW_HID_TRANSPORT_BLE);
     raise_raw_hid_received_event((struct raw_hid_received_event){.data = data, .length = len});
 
@@ -124,9 +132,10 @@ BT_GATT_SERVICE_DEFINE(
                            BT_GATT_PERM_WRITE, NULL, write_ctrl_point, &ctrl_point));
 
 void raw_hid_ble_send(const uint8_t *data, uint8_t len) {
-    struct bt_conn *conn = zmk_ble_active_profile_conn();
+    struct bt_conn *conn = reply_addr_set ? bt_conn_lookup_addr_le(BT_ID_DEFAULT, &reply_addr)
+                                          : zmk_ble_active_profile_conn();
     if (conn == NULL) {
-        LOG_ERR("Not connected to active profile");
+        LOG_ERR("Raw HID host not connected");
         return;
     }
 
