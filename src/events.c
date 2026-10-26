@@ -16,6 +16,13 @@ ZMK_EVENT_IMPL(raw_hid_sent_event);
  * thread (e.g. a deferred save echo) still follows its request. Until the
  * first report arrives, sends go to every enabled transport (upstream
  * behaviour).
+ *
+ * Limit: the route is the last request's, not each reply's own. A deferred
+ * reply raised after another transport sent a request goes to that one.
+ * Tagging each reply would need a field in raw_hid_sent_event that every
+ * consumer fills in. Synchronous replies are raised on the thread that
+ * received the request, right after the route is set, so they always match;
+ * BLE HOG and other GATT transports share the BT RX thread.
  */
 static atomic_t reply_transport = ATOMIC_INIT(RAW_HID_TRANSPORT_ALL);
 
