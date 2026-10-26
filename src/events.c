@@ -21,8 +21,10 @@ ZMK_EVENT_IMPL(raw_hid_sent_event);
  * reply raised after another transport sent a request goes to that one.
  * Tagging each reply would need a field in raw_hid_sent_event that every
  * consumer fills in. Synchronous replies are raised on the thread that
- * received the request, right after the route is set, so they always match;
- * BLE HOG and other GATT transports share the BT RX thread.
+ * received the request, right after the route is set. BLE HOG and other GATT
+ * transports share the BT RX thread, so with USB compiled out
+ * (RAW_HID_USB=n) they always match; with USB too, a USB and a BLE request
+ * landing at the same moment can still cross.
  */
 static atomic_t reply_transport = ATOMIC_INIT(RAW_HID_TRANSPORT_ALL);
 
